@@ -1,0 +1,12 @@
+set.seed(123)
+nums <- sample(1:100, 100, replace = TRUE)
+isSquare <- function(x) {
+  sqrt(x) == floor(sqrt(x))
+}
+sq_nums <- nums[sapply(nums, isSquare)]
+avg <- mean(sq_nums)
+sd_val <- sd(sq_nums)
+cat("Random Numbers:\n", nums, "\n\n")
+cat("Perfect Squares:\n", sq_nums, "\n\n")
+cat("Mean:", avg, "\n")
+cat("Standard Deviation:", sd_val, "\n")
