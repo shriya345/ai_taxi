@@ -1,0 +1,55 @@
+
+library(moments)
+
+
+data <- read.csv("mtcars.csv")
+
+
+mpg <- data$mpg
+
+
+mean_mpg <- mean(mpg)
+median_mpg <- median(mpg)
+
+
+mode_fun <- function(x) {
+  unique_x <- unique(x)
+  unique_x[which.max(tabulate(match(x, unique_x)))]
+}
+mode_mpg <- mode_fun(mpg)
+
+var_mpg <- var(mpg)
+sd_mpg <- sd(mpg)
+range_mpg <- range(mpg)
+iqr_mpg <- IQR(mpg)
+
+skew_mpg <- skewness(mpg)
+kurt_mpg <- kurtosis(mpg)
+
+
+cat("Mean:", mean_mpg, "\n")
+cat("Median:", median_mpg, "\n")
+cat("Mode:", mode_mpg, "\n")
+cat("Variance:", var_mpg, "\n")
+cat("SD:", sd_mpg, "\n")
+cat("Range:", range_mpg[1], "to", range_mpg[2], "\n")
+cat("IQR:", iqr_mpg, "\n")
+cat("Skewness:", skew_mpg, "\n")
+cat("Kurtosis:", kurt_mpg, "\n")
+
+
+if (skew_mpg > 0) {
+  cat("Right skewed\n")
+} else if (skew_mpg < 0) {
+  cat("Left skewed\n")
+} else {
+  cat("Symmetric\n")
+}
+
+if (kurt_mpg > 3) {
+  cat("Leptokurtic\n")
+} else if (kurt_mpg < 3) {
+  cat("Platykurtic\n")
+} else {
+  cat("Normal distribution\n")
+}
