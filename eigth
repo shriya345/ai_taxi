@@ -1,0 +1,47 @@
+
+iris <- read.csv("iris.csv")
+
+
+num <- iris[, 1:4]
+
+
+cov_mat <- cov(num)
+cat("Covariance Matrix:\n")
+print(cov_mat)
+
+
+cor_mat <- cor(num)
+cat("\nCorrelation Matrix:\n")
+print(cor_mat)
+
+
+vals <- cor_mat[lower.tri(cor_mat)]
+
+max_val <- max(vals)
+min_val <- min(vals)
+
+max_pos <- which(cor_mat == max_val, arr.ind = TRUE)
+min_pos <- which(cor_mat == min_val, arr.ind = TRUE)
+
+cat("\nHighest Positive Correlation:", max_val,
+    "between", colnames(cor_mat)[max_pos[1,1]], "and",
+    colnames(cor_mat)[max_pos[1,2]], "\n")
+
+cat("Highest Negative Correlation:", min_val,
+    "between", colnames(cor_mat)[min_pos[1,1]], "and",
+    colnames(cor_mat)[min_pos[1,2]], "\n")
+
+
+plot(iris$sepal_length, iris$petal_length,
+     main="Sepal vs Petal Length",
+     xlab="Sepal Length",
+     ylab="Petal Length",
+     pch=19, col="blue")
+
+model <- lm(petal_length ~ sepal_length, data=iris)
+abline(model, col="red", lwd=2)
+
+
+cor_val <- cor(iris$sepal_length, iris$petal_length)
+cat("\nCorrelation between Sepal Length and Petal Length:",
+    cor_val, "\n")
