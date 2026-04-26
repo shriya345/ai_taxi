@@ -1,0 +1,45 @@
+
+library(ggplot2)
+library(dplyr)
+
+
+orders <- read.csv("orders1.csv", stringsAsFactors = FALSE)
+
+
+orders$order_date <- as.Date(orders$order_date, format = "%d-%m-%Y")
+
+
+monthly_sales <- orders %>%
+  mutate(month = format(order_date, "%Y-%m")) %>%
+  group_by(month) %>%
+  summarise(total_revenue = sum(total_amount))
+
+print(monthly_sales)
+
+
+
+most_popular <- orders %>%
+  count(product_category) %>%
+  arrange(desc(n)) %>%
+  slice(1)
+
+cat("\nMost Popular Category:\n")
+print(most_popular)
+
+
+
+avg_order <- orders %>%
+  group_by(customer_id) %>%
+  summarise(avg_value = mean(total_amount))
+
+cat("\nAverage Order Value:\n")
+print(avg_order)
+
+
+
+ggplot(monthly_sales, aes(x = month, y = total_revenue, group = 1)) +
+  geom_line(color = "blue") +
+  geom_point(color = "red") +
+  labs(title = "Monthly Sales Revenue",
+       x = "Month", y = "Revenue") +
+  theme_minimal()
