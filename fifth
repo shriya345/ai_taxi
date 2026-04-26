@@ -1,0 +1,62 @@
+# Read data
+cars <- read.csv("mtcars.csv")
+
+# -------------------------------
+# Basic info
+# -------------------------------
+head(cars)
+str(cars)
+
+# -------------------------------
+# Histogram
+# -------------------------------
+hist(cars$mpg,
+     main = "MPG Histogram",
+     xlab = "MPG",
+     col = "skyblue")
+
+# -------------------------------
+# Boxplot (MPG vs Cylinders)
+# -------------------------------
+cars$cyl <- as.factor(cars$cyl)
+
+boxplot(mpg ~ cyl,
+        data = cars,
+        main = "MPG by Cylinders",
+        xlab = "Cylinders",
+        ylab = "MPG",
+        col = c("lightgreen","lightblue","lightpink"))
+
+# -------------------------------
+# Scatter plot + Regression line
+# -------------------------------
+plot(cars$wt, cars$mpg,
+     main = "MPG vs Weight",
+     xlab = "Weight",
+     ylab = "MPG",
+     pch = 19,
+     col = "blue")
+
+model <- lm(mpg ~ wt, data = cars)
+abline(model, col = "red", lwd = 2)
+
+# -------------------------------
+# Mean & SD + Bar chart
+# -------------------------------
+mean_hp <- tapply(cars$hp, cars$cyl, mean)
+sd_hp <- tapply(cars$hp, cars$cyl, sd)
+
+bar_pos <- barplot(mean_hp,
+                   main = "Avg HP by Cyl",
+                   xlab = "Cylinders",
+                   ylab = "Horsepower",
+                   col = c("orange","purple","cyan"),
+                   ylim = c(0, max(mean_hp + sd_hp) + 20))
+
+arrows(bar_pos,
+       mean_hp - sd_hp,
+       bar_pos,
+       mean_hp + sd_hp,
+       angle = 90,
+       code = 3,
+       length = 0.1)
