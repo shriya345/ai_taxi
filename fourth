@@ -1,0 +1,31 @@
+
+library(ggplot2)
+library(dplyr)
+
+sales_q1 <- read.csv("sales_q1.csv", stringsAsFactors = FALSE)
+sales_q2 <- read.csv("sales_q2.csv", stringsAsFactors = FALSE)
+
+
+sales_q1$Quarter <- "Q1"
+sales_q2$Quarter <- "Q2"
+
+sales_data <- rbind(sales_q1, sales_q2)
+
+
+sales_data <- sales_data %>%
+  mutate(Sales = Units.Sold * Unit.Price)
+
+total_sales <- sales_data %>%
+  group_by(Quarter) %>%
+  summarise(Total_Sales = sum(Sales))
+
+print(total_sales)
+
+
+
+ggplot(total_sales, aes(x = Quarter, y = Total_Sales)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Total Sales by Quarter",
+       x = "Quarter",
+       y = "Total Sales") +
+  theme_minimal()
