@@ -1,23 +1,14 @@
-# Read data
+
 cars <- read.csv("mtcars.csv")
 
-# -------------------------------
-# Basic info
-# -------------------------------
 head(cars)
 str(cars)
 
-# -------------------------------
-# Histogram
-# -------------------------------
 hist(cars$mpg,
      main = "MPG Histogram",
      xlab = "MPG",
      col = "skyblue")
 
-# -------------------------------
-# Boxplot (MPG vs Cylinders)
-# -------------------------------
 cars$cyl <- as.factor(cars$cyl)
 
 boxplot(mpg ~ cyl,
@@ -27,9 +18,7 @@ boxplot(mpg ~ cyl,
         ylab = "MPG",
         col = c("lightgreen","lightblue","lightpink"))
 
-# -------------------------------
-# Scatter plot + Regression line
-# -------------------------------
+
 plot(cars$wt, cars$mpg,
      main = "MPG vs Weight",
      xlab = "Weight",
@@ -40,9 +29,7 @@ plot(cars$wt, cars$mpg,
 model <- lm(mpg ~ wt, data = cars)
 abline(model, col = "red", lwd = 2)
 
-# -------------------------------
-# Mean & SD + Bar chart
-# -------------------------------
+
 mean_hp <- tapply(cars$hp, cars$cyl, mean)
 sd_hp <- tapply(cars$hp, cars$cyl, sd)
 
