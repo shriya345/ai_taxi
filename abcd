@@ -1,0 +1,14 @@
+PROCEDURE:
+Steps:
+1. Open Browser, type localhost:9869
+2. Login using username: oneadmin, password: opennebula
+3. Then follow the steps to migrate VMs a. Click on infrastructure b. Select clusters
+and enter the cluster name c. Then select host tab, and select all host d. Then select
+Vnets tab, and select all vnet e. Then select datastores tab, and select all datastores
+f. And then choose host under infrastructure tab g. Click on + symbol to add new
+host, name the host then click on create.
+4. on instances, select VMs to migrate then follow the stpes a. Click on 8th icon ,the
+drop down list display b. Select migrate on that ,the popup window display c. On
+that select the target host to migrate then click on migrate.
+Before migration Host:SACET Host:one-sandbox After Migration: Host:onesandbox Host:SACET APPLICATIONS: Easily migrate your virtual machine from
+one pc to another
