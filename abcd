@@ -12,3 +12,45 @@ drop down list display b. Select migrate on that ,the popup window display c. On
 that select the target host to migrate then click on migrate.
 Before migration Host:SACET Host:one-sandbox After Migration: Host:onesandbox Host:SACET APPLICATIONS: Easily migrate your virtual machine from
 one pc to another
+Steps
+Step 1: Open Web Interface
+Open browser
+Type: localhost:9869
+Login using:
+Username: oneadmin
+Password: opennebula
+Step 2: Navigate to Infrastructure
+Click on Infrastructure tab
+Select Clusters
+Choose the required cluster
+Step 3: Verify Resources
+
+Inside cluster, check:
+
+Hosts tab → Select all hosts
+Vnets tab → Select all virtual networks
+Datastores tab → Select all datastores
+Step 4: Add New Host
+Go to Infrastructure → Hosts
+Click on + (Add Host)
+Enter host name
+Click Create
+Step 5: Select Virtual Machine
+Go to Instances (VMs)
+Select the VM you want to migrate
+Step 6: Perform Migration
+Click on Migrate option (8th icon)
+Select Migrate from dropdown
+Popup window appears
+Choose target host
+Click Migrate
+Step 7: Verify Migration
+Before migration: VM runs on source host
+After migration: VM runs on target host
+📱 Application
+Used to move VM from one system to another
+Helps in load balancing
+Ensures high availability
+✅ Result
+
+Virtual machine is successfully migrated from one host to another.
