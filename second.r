@@ -1,26 +1,39 @@
-isMedian<-function(x){
-  Median<-median(x)
+
+isMedian <- function(x){
+    Median <- median(x)
+    return(Median)
 }
-isPalindrome<-function(x){
-  x<-tolower(gsub(" ","",x))
-  x==paste(rev(strsplit(x,"")[[1]]),collapse="")
+
+
+isPalindrome <- function(x){
+    x <- tolower(gsub(" ","",x))
+    x == paste(rev(strsplit(x,"")[[1]]), collapse = "")
 }
-isArea<-function(b,h){
-  b*h*0.5
+
+
+isArea <- function(b,h){
+    b * h * 0.5
 }
-v<-c(10,20,30,40,50)
-med<-isMedian(v)
-p1<-isPalindrome("hello")
-p2<-isPalindrome("madam")
-tri<-isArea(10,5)
+
+
+v <- c(10,20,30,40,50)
+
+
+med <- isMedian(v)
+
+p1 <- isPalindrome("hello")
+p2 <- isPalindrome("madam")
+
+tri <- isArea(10,5)
+
+
 cat("Vector:", v, "\n")
 cat("Median:", med, "\n\n")
 
-cat("madam ->", p1, "\n")
-cat("hello ->", p2, "\n\n")
+cat("hello ->", p1, "\n")
+cat("madam ->", p2, "\n\n")
 
 cat("Triangle Area:", tri, "\n")
-
 
 library(ggplot2)
 library(dplyr)
