@@ -1,0 +1,485 @@
+I have a Big Data Analytics lab exam and only 2 programs are in the portion. I need very step-by-step execution help, especially on Windows PowerShell + Docker + Hadoop, but I have practiced on a MacBook Air M4. Please guide me one command at a time and help debug errors if they occur.
+
+IMPORTANT EXECUTION CONTEXT
+
+For Windows lab systems:
+
+Docker Desktop should be running.
+Use PowerShell outside Docker.
+Inside Docker, the prompt changes to something like:
+bash-4.2$
+
+or:
+
+hadoop@...
+Once inside Docker, Linux/Hadoop commands are basically the same as what I practiced on Mac.
+If an error occurs, do not jump ahead. Diagnose the current error and give me the exact next command.
+If I send a screenshot or terminal output, inspect it and tell me exactly what to do next.
+I am not very confident with shell/Linux, so explain in simple terms.
+PROGRAM 1 — WORD COUNT USING HADOOP MAPREDUCE
+Main idea
+
+Input text is processed as:
+
+Input
+→ Mapper
+→ Shuffle and Sort
+→ Reducer
+→ Output
+
+Mapper emits:
+
+(word, 1)
+
+Reducer receives:
+
+(word, [1,1,1,...])
+
+and outputs:
+
+(word, total)
+
+Combiner reduces shuffle traffic by partially summing mapper output before shuffle.
+
+Windows / Docker commands
+mkdir bda-labs
+cd bda-labs
+mkdir program_1
+cd program_1
+
+Start container:
+
+docker run -dit --name hadoop apache/hadoop:3.3.6 bash
+
+Enter container:
+
+docker exec -it hadoop bash
+
+Optional checks:
+
+hadoop version
+java -version
+javac -version
+Creating WordCount.java
+
+If file is NOT already provided:
+
+vi WordCount.java
+
+Then:
+
+i
+
+Paste this:
+
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class WordCount {
+
+    public static class TokenizerMapper
+            extends Mapper<Object, Text, Text, IntWritable> {
+
+        private final static IntWritable one = new IntWritable(1);
+        private Text word = new Text();
+
+        public void map(Object key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            StringTokenizer itr = new StringTokenizer(value.toString());
+
+            while (itr.hasMoreTokens()) {
+                word.set(itr.nextToken().toLowerCase());
+                context.write(word, one);
+            }
+        }
+    }
+
+    public static class IntSumReducer
+            extends Reducer<Text, IntWritable, Text, IntWritable> {
+
+        private IntWritable result = new IntWritable();
+
+        public void reduce(Text key, Iterable<IntWritable> values,
+                           Context context)
+                throws IOException, InterruptedException {
+
+            int sum = 0;
+
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+
+            result.set(sum);
+            context.write(key, result);
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        Configuration conf = new Configuration();
+
+        Job job = Job.getInstance(conf, "word count");
+
+        job.setJarByClass(WordCount.class);
+        job.setMapperClass(TokenizerMapper.class);
+        job.setCombinerClass(IntSumReducer.class);
+        job.setReducerClass(IntSumReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+
+Save with:
+
+Esc
+:wq
+Enter
+
+If WordCount.java is already provided on Windows, it may instead be copied into the container using something like:
+
+docker cp C:\bda-labs\program_1\WordCount.java hadoop:/opt/hadoop/WordCount.java
+Input files
+mkdir input
+echo "the quick brown fox the lazy dog the fox" > input/file1.txt
+echo "a quick dog and a brown fox jumped" > input/file2.txt
+
+Optional:
+
+cat input/file1.txt
+cat input/file2.txt
+Compile and run
+export HADOOP_CLASSPATH=$(hadoop classpath)
+mkdir classes
+javac -classpath "$HADOOP_CLASSPATH" -d classes WordCount.java
+jar -cvf wordcount.jar -C classes .
+hadoop jar wordcount.jar WordCount input output
+cat output/part-r-00000
+
+Expected output:
+
+a       2
+and     1
+brown   2
+dog     2
+fox     3
+jumped  1
+lazy    1
+quick   2
+the     3
+
+If re-running:
+
+rm -rf output
+hadoop jar wordcount.jar WordCount input output
+
+Exit:
+
+exit
+
+Then:
+
+docker rm -f hadoop
+Common Program 1 errors
+
+If:
+
+bash: nano: command not found
+
+use:
+
+vi WordCount.java
+
+If:
+
+Output directory already exists
+
+use:
+
+rm -rf output
+
+If Java compilation reports source errors, inspect the exact line. Example we encountered:
+
+mport java.io.IOException;
+
+must be:
+
+import java.io.IOException;
+
+If:
+
+javac: command not found
+
+that means the Java compiler is missing from that container. On the actual college Windows system it may already be installed. Do NOT assume Mac-specific package fixes are part of the lab write-up.
+
+PROGRAM 2 — HDFS FILE OPERATIONS USING JAVA FILESYSTEM API
+Main idea
+
+This uses actual HDFS, unlike Program 1 local-mode MapReduce.
+
+It runs:
+
+NameNode + DataNode
+
+NameNode = metadata
+DataNode = actual data blocks
+
+The Java program demonstrates:
+
+create()
+open()
+seek()
+getFileStatus()
+listStatus()
+globStatus()
+Windows setup
+cd bda-labs
+mkdir lab2-hdfs
+cd lab2-hdfs
+
+Create:
+
+notepad docker-compose.yml
+
+Paste:
+
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"
+    env_file:
+      - ./config
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+
+  datanode:
+    image: apache/hadoop:3.3.6
+    command: ["hdfs", "datanode"]
+    env_file:
+      - ./config
+
+Create config:
+
+notepad config
+
+Paste:
+
+CORE-SITE.XML_fs.default.name=hdfs://namenode
+CORE-SITE.XML_fs.defaultFS=hdfs://namenode
+HDFS-SITE.XML_dfs.namenode.rpc-address=namenode:8020
+HDFS-SITE.XML_dfs.replication=1
+
+Start:
+
+docker compose up -d
+
+Optional:
+
+docker compose ps
+
+Enter NameNode:
+
+docker compose exec namenode bash
+
+Create HDFS directory:
+
+hdfs dfs -mkdir -p /user/student
+hdfs dfs -ls /user
+Create HdfsDemo.java
+vi HdfsDemo.java
+
+Press:
+
+i
+
+Paste:
+
+import java.net.URI;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.Path;
+
+public class HdfsDemo {
+
+    public static void main(String[] args) throws Exception {
+
+        String uri = "hdfs://namenode:8020";
+
+        Configuration conf = new Configuration();
+        FileSystem fs = FileSystem.get(URI.create(uri), conf);
+
+        Path file = new Path("/user/student/quangle.txt");
+
+        FSDataOutputStream out = fs.create(file);
+        out.writeBytes("On the top of the Crumpetty Tree\n");
+        out.writeBytes("The Quangle Wangle sat\n");
+        out.close();
+
+        System.out.println("Wrote file: " + file);
+
+        FSDataInputStream in = fs.open(file);
+
+        byte[] buffer = new byte[32];
+        in.read(buffer);
+        System.out.println("From start : " + new String(buffer).trim());
+
+        in.seek(33);
+
+        byte[] buf2 = new byte[32];
+        in.read(buf2);
+        System.out.println("After seek : " + new String(buf2).trim());
+
+        in.close();
+
+        FileStatus st = fs.getFileStatus(file);
+
+        System.out.println("Length     : " + st.getLen() + " bytes");
+        System.out.println("Replication: " + st.getReplication());
+
+        System.out.println("--- listStatus /user/student ---");
+
+        for (FileStatus s : fs.listStatus(new Path("/user/student"))) {
+            System.out.println("  " + s.getPath().getName());
+        }
+
+        System.out.println("--- globStatus *.txt ---");
+
+        for (FileStatus s : fs.globStatus(
+                new Path("/user/student/*.txt"))) {
+            System.out.println("  " + s.getPath().getName());
+        }
+
+        fs.close();
+    }
+}
+
+Save:
+
+Esc
+:wq
+Enter
+Compile and run
+export HADOOP_CLASSPATH=$(hadoop classpath)
+mkdir classes
+javac -classpath "$HADOOP_CLASSPATH" -d classes HdfsDemo.java
+jar -cvf hdfsdemo.jar -C classes .
+hadoop jar hdfsdemo.jar HdfsDemo
+
+Expected main output:
+
+Wrote file: /user/student/quangle.txt
+From start : On the top of the Crumpetty Tree
+After seek : The Quangle Wangle sat
+Length     : 56 bytes
+Replication: 1
+--- listStatus /user/student ---
+  quangle.txt
+--- globStatus *.txt ---
+  quangle.txt
+
+Verify HDFS file:
+
+hdfs dfs -cat /user/student/quangle.txt
+
+Expected:
+
+On the top of the Crumpetty Tree
+The Quangle Wangle sat
+
+Add second file:
+
+echo "hello hdfs" | hdfs dfs -put - /user/student/notes.txt
+
+Run again:
+
+hadoop jar hdfsdemo.jar HdfsDemo
+
+Then both quangle.txt and notes.txt should appear in list/glob output.
+
+Exit:
+
+exit
+
+Then:
+
+docker compose down
+Common Program 2 errors
+
+If:
+
+no configuration file provided: not found
+
+you ran docker compose up -d before creating docker-compose.yml, or you are in the wrong folder.
+
+Check:
+
+dir
+
+or:
+
+ls
+
+You should see:
+
+docker-compose.yml
+config
+
+If:
+
+javac: command not found
+
+the Java compiler is missing in that fresh container. This happened during Mac practice. It is not part of the normal exam procedure.
+
+If:
+
+file already exists
+
+for some HDFS operation, delete it with:
+
+hdfs dfs -rm /path/to/file
+
+For the provided fs.create(file) program, overwrite is normally allowed.
+
+VERY IMPORTANT BEHAVIOR FOR THE NEXT CHATGPT
+
+When I ask for help during the exam:
+
+Ask me to paste the exact terminal output or send a screenshot.
+Tell me whether I am currently in PowerShell or inside Docker based on the prompt.
+Give me only the next command or next few commands, not the whole lab again unless I ask.
+Do not confuse Program 1 and Program 2.
+Do not make me install unnecessary software unless the error specifically proves it is needed.
+If I ask about the Java code, explain the exact line/class/method in simple terms.
+If I ask for viva answers, give short exam-style answers.
+If I ask “what next?”, continue from the exact stage I am at.
+
+Remember that for Program 1:
+
+Mapper → Shuffle and Sort → Reducer
+
+Remember that for Program 2:
+
+HDFS → NameNode/DataNode → create/open/seek/list/glob
