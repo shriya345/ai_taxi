@@ -1,0 +1,52 @@
+cd bda-labs
+mkdir lab2-hdfs
+cd lab2-hdfs
+
+notepad docker-compose.yml
+
+services:
+  namenode:
+    image: apache/hadoop:3.3.6
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"
+    env_file:
+      - ./config
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+
+  datanode:
+    image: apache/hadoop:3.3.6
+    command: ["hdfs", "datanode"]
+    env_file:
+      - ./config
+notepad config
+
+CORE-SITE.XML_fs.default.name=hdfs://namenode
+CORE-SITE.XML_fs.defaultFS=hdfs://namenode
+HDFS-SITE.XML_dfs.namenode.rpc-address=namenode:8020
+HDFS-SITE.XML_dfs.replication=1
+docker compose up -d
+
+docker compose exec namenode bash
+hdfs dfs -mkdir -p /user/student
+
+hdfs dfs -ls /user
+
+vi HdfsDemo.java
+export HADOOP_CLASSPATH=$(hadoop classpath)
+
+mkdir classes
+
+javac -classpath "$HADOOP_CLASSPATH" -d classes HdfsDemo.java
+
+jar -cvf hdfsdemo.jar -C classes .
+
+hadoop jar hdfsdemo.jar HdfsDemo
+hdfs dfs -cat /user/student/quangle.txt
+echo "hello hdfs" | hdfs dfs -put - /user/student/notes.txt
+
+hadoop jar hdfsdemo.jar HdfsDemo
+exit
+docker compose down
